@@ -11,7 +11,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 from threading import Thread
 from app import create_app, db
-from app.models import User, Role
+from app.models import Role, Use 
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
