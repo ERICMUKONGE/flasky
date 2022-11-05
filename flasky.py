@@ -15,7 +15,6 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 bootstrap = Bootstrap(app)
 moment = Moment(app)
-
 mail = Mail(app)
 app.config['SECRET_KEY'] = 'hard to guess string'
 app.config['SQLALCHEMY_DATABASE_URI']=\
