@@ -15,14 +15,15 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 bootstrap = Bootstrap(app)
 moment = Moment(app)
-db = SQLAlchemy()
-migrate = Migrate(app, db)
+
 mail = Mail(app)
 app.config['SECRET_KEY'] = 'hard to guess string'
 app.config['SQLALCHEMY_DATABASE_URI']=\
-    'sqlite:///' + os.path.join(basedir, 'data.sqlite')
-db.init_app(app)    
+    'sqlite:///' + os.path.join(basedir, 'data.sqlite')    
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy()
+migrate = Migrate(app, db)
+db.init_app(app)
 app.config['MAIL_SERVER'] = 'stmp.googlemail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
