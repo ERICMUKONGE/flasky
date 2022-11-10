@@ -4,7 +4,6 @@ from . import login_manager
 from . import db
 
 
-
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer(), primary_key =True)
