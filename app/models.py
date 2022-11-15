@@ -3,6 +3,7 @@ from flask_login import UserMixin
 from . import login_manager
 from . import db
 
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key =True)
@@ -11,6 +12,19 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128))
     role_id = db.Column(db.Integer(), db.ForeignKey('role.id'))
     password_hash = db.Column(db.String(128))
+
+class Role(UserMixin, db.Model):
+    __tablename__='roles'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), unique=True)
+    default = db.Column(db.Boolean,default=False, index=True)
+    permissions = db.Column(db.Integer)
+    users = db.relationship('User', backref='role', lazy='dynamic')
+
+    def __init__(self, **kwargs):
+        super(Role, self).__init__(**kwargs)
+        if self.permissions is None:
+            self.permissions = 0
 
     @property
     def password(self):
