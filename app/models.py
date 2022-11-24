@@ -1,17 +1,33 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
-from . import login_manager
-from . import db
-
+from . import login_manager, db
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from flask import current_app
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key =True)
     email = db.Column(db.String(64), unique=True, index=True)
     username = db.Column(db.String(64), unique=True, index=True)
-    password_hash = db.Column(db.String(128))
     role_id = db.Column(db.Integer(), db.ForeignKey('role.id'))
-   
+    password_hash = db.Column(db.String(128))
+    confirmed = db.Column(db.Boolean, default=False)
+
+    def generate_confirmation_token(self, expiration=3600):
+        s = Serializer(current_app.config['SECRET_KEY'], expiration)
+        return s.dumps({'confirm': self.id}).decode('utf-8')
+
+    def confirm(self, token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token.encode('utf-8'))
+        except:
+            return False
+        if data.get('confirm') != self.id:
+            return False
+        self.confirmed = True
+        db.session.add(self)
+        return True          
 
 class Role(UserMixin, db.Model):
     __tablename__='roles'
@@ -26,6 +42,29 @@ class Role(UserMixin, db.Model):
         if self.permissions is None:
             self.permissions = 0
 
+
+    @staticmethod
+    def insert_roles():
+        roles = {
+            'User':[Permission.FOLLOW, Permission.COMMENT, Permission.WRITE],
+            'Moderator':[Permission.FOLLOW, Permission.COMMENT,
+                         Permission.WRITE, Permission.MODERATE],
+            'Administrator':[Permission.FOLLOW, Permission.COMMENT,
+                         Permission.WRITE, Permission.MODERATE,
+                         Permission.ADMIN],             
+        }
+        default_role = 'User'
+        for r in roles:
+            role = Role.query.filter_by(name=r).first()
+            if role is None:
+                role = Role(name=r)
+            role.reset_permissions()
+            for perm in roles[r]:
+                role.add_permission(perm)
+            role.default = (role.name == default_role)
+            db.session.add(role)
+        db.session.commit()
+                        
     @property
     def password(self):
         raise AttributeError('password is not a readable attribute')
@@ -40,5 +79,7 @@ class Role(UserMixin, db.Model):
     @login_manager.user_loader
     def load_user(user_id): 
         return User.query.get(int(user_id)) 
-
-               
+        @app.route('/secret')
+        @login_required
+        def secret():
+            return'Only authenticate users are allowed!'             
