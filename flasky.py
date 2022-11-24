@@ -12,7 +12,9 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 from threading import Thread
+from flask_login import login_required
 
+app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
@@ -23,9 +25,9 @@ app.config['SECRET_KEY'] = 'hard to guess string'
 app.config['SQLALCHEMY_DATABASE_URI']=\
     'sqlite:///' + os.path.join(basedir, 'data.sqlite')    
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config["SQLQCHEMY_ECHO"]=True
 db = SQLAlchemy()
 db.init_app(app)
-app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 migrate = Migrate(app, db)
 app.config['MAIL_SERVER'] = 'stmp.googlemail.com'
 app.config['MAIL_PORT'] = 587
@@ -51,18 +53,21 @@ def send_email(to, subject, template, **kwargs):
                   sender=app.config['FLASKY_MAIL_SENDER'], recipients=[to])
     msg.body = render_template(template + '.txt', **kwargs)
     msg.html = render_template(template + '.html', **kwargs)
+    # mail.send(msg)
     thr = Thread(target=send_async_email,args=[app, msg])
     thr.start()
     return thr
 
 @app.route('/', methods=['GET','POST'])
 def index():
+    # name = None
     form = NameForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.name.data).first()
         if user is None:
             user = User(username=form.name.data)
             db.session.add(user)
+            # db.session.commit()
             session['known'] = False
             if app.config['FLASKY_ADMIN']:
                 send_email(app.config['FLASKY_ADMIN'], 'New User',
@@ -72,7 +77,7 @@ def index():
         session['name'] = form.name.data
         form.name.data = ''
         return redirect(url_for('index'))
-    return render_template('index.html', form=form, name=session.get('name'),
+    return render_template('index.html', form=form,  name=session.get('name'),
                            known=session.get('known', False))                                       
 
 @app.route('/user/<name>')
@@ -85,7 +90,7 @@ def page_not_found(e):
 
 @app.errorhandler(500)
 def internal_server_error(e):
-    return render_template('500'), 500         
+    return render_template('500.html'), 500         
 
 class NameForm(FlaskForm):
     name = StringField('What is your name?', validators=[DataRequired()])
@@ -95,11 +100,12 @@ class Role(db.Model):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
-
+     
     def __repr__(self):
         return '<Role %r>' % self.name
 
-    users = db.relationship('User', backref='role', lazy='dynamic')    
+    users = db.relationship('User', backref='role', lazy='dynamic')
+      
 
 class User(db.Model): 
     __tablename__ = 'users' 
@@ -121,7 +127,11 @@ def test():
     import unittest
     tests = unittest.TestLoader().discover('tests')
     unittest.TextTestRunner(verbosity=2).run(tests)    
-    
+
+@app.route('/secret')
+@login_required
+def secret():
+    return'Only authenticate users are allowed!'
+
 if __name__ == '__main__':
     app.run(debug=True)    
-    
