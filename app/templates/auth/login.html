@@ -11,3 +11,11 @@
     {{ wtf.quick_form(form) }}
 </div>
 {% endblock %}
+
+<p>
+    New user?
+    <a href="{{ url_for('auth.register') }}">
+        Click here to register
+
+    </a>
+</p>
