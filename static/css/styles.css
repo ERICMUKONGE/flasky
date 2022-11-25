@@ -1,0 +1,27 @@
+*{
+    font-family: sans-serif;
+    padding: 5px;
+    background-color: black;
+}
+
+title{
+    font-size: large;
+    padding: 10px;
+    background-color: blue;
+}
+head{
+    font-style: oblique;
+    text-align: center;
+    padding: 20%;
+}
+navbar{
+    text-decoration: none;
+    padding: 15px;
+    border-color: brown;
+    background-color: blueviolet;
+}
+button{
+    color: black;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    padding-inline: 45px;
+}
