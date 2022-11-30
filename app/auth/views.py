@@ -1,6 +1,7 @@
 from flask import render_template, redirect, request, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
-from . import auth, db
+from . import auth
+from . import db
 from ..models import User
 from .forms import LoginForm
 # from ..email import send_email
@@ -25,7 +26,6 @@ def confirm(token):
     if current_user.confirmed:
         return redirect(url_for('main.index'))
     if current_user.confirm(token):
-        db.session.add(token)
         db.session.commit()
         flash('You have confirmed your account. Thanks!')
     else:
@@ -43,7 +43,7 @@ def logout():
 # def register():
 #     form = RegistrationForm()
 #     if form.validate_on_submit():
-#         user =User(email=form.email.data,
+#         user = User(email=form.email.data,
 #                    username=form.username.data,
 #                    password=form.password.data)
 #         db.session.add(user)
