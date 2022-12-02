@@ -7,7 +7,7 @@ from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 import os
 from app import create_app, db
-from app.models import User
+from app.models import User, Role
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
@@ -26,7 +26,7 @@ app.config['SQLALCHEMY_DATABASE_URI']=\
     'sqlite:///' + os.path.join(basedir, 'data.sqlite')    
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config["SQLALCHEMY_ECHO"]=True
-db = SQLAlchemy()
+db = SQLAlchemy(app)
 db.init_app(app)
 
 with app.app_context():
@@ -56,21 +56,28 @@ def send_email(to, subject, template, **kwargs):
                   sender=app.config['FLASKY_MAIL_SENDER'], recipients=[to])
     msg.body = render_template(template + '.txt', **kwargs)
     msg.html = render_template(template + '.html', **kwargs)
-    # mail.send(msg)
+    mail.send(msg)
     thr = Thread(target=send_async_email,args=[app, msg])
     thr.start()
     return thr
 
 @app.route('/', methods=['GET','POST'])
 def index():
-    # name = None
+    name = None
     form = NameForm()
     if form.validate_on_submit():
+        name = form.name.data
+        form.name.data = ''
+        old_name = session.get('name')
+        if old_name is not None and old_name != form.name.data:
+            flash('Looks like you have changed your name!')
+        session['name'] = form.name.data
+
         user = User.query.filter_by(username=form.name.data).first()
         if user is None:
             user = User(username=form.name.data)
             db.session.add(user)
-            # db.session.commit()
+            db.session.commit()
             session['known'] = False
             if app.config['FLASKY_ADMIN']:
                 send_email(app.config['FLASKY_ADMIN'], 'New User',
@@ -80,8 +87,8 @@ def index():
         session['name'] = form.name.data
         form.name.data = ''
         return redirect(url_for('index'))
-    return render_template('index.html', form=form,  name=session.get('name'),
-                           known=session.get('known', False))                                       
+    return render_template('index.html', form=form, name=session.get('name'),
+                           known=session.get('known', False), current_time=datetime.utcnow())                                       
 
 @app.route('/user/<name>')
 def user(name):
