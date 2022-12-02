@@ -25,9 +25,12 @@ app.config['SECRET_KEY'] = 'hard to guess string'
 app.config['SQLALCHEMY_DATABASE_URI']=\
     'sqlite:///' + os.path.join(basedir, 'data.sqlite')    
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config["SQLQCHEMY_ECHO"]=True
+app.config["SQLALCHEMY_ECHO"]=True
 db = SQLAlchemy()
 db.init_app(app)
+
+with app.app_context():
+    db.create_all()
 migrate = Migrate(app, db)
 app.config['MAIL_SERVER'] = 'stmp.googlemail.com'
 app.config['MAIL_PORT'] = 587
