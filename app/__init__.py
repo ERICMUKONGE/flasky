@@ -5,11 +5,12 @@ from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from config import config
 from flask_login import LoginManager
+from .exts import db
 
 bootstrap = Bootstrap()
 mail = Mail()
 moment = Moment()
-db = SQLAlchemy()
+
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 

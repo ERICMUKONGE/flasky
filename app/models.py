@@ -1,11 +1,9 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin,AnonymousUserMixin
-from . import login_manager, db
+from . import login_manager
+from .exts import db
 from itsdangerous import URLSafeTimedSerializer  as Serializer
-#TimedJSONWebSignature
 from flask import current_app
-from flask_sqlalchemy import SQLAlchemy
-from app.models import db, NameForm
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
