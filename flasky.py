@@ -8,7 +8,6 @@ from wtforms.validators import DataRequired
 import os
 from app import create_app, db
 from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 from threading import Thread
 from flask_login import login_required
@@ -25,7 +24,6 @@ app.config['SQLALCHEMY_DATABASE_URI']=\
     'sqlite:///' + os.path.join(basedir, 'data.sqlite')    
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config["SQLALCHEMY_ECHO"]=True
-db = SQLAlchemy(app)
 db.init_app(app)
 
 with app.app_context():
